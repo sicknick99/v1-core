@@ -14,6 +14,12 @@ contract OverlayV1UniswapV3Factory is OverlayV1FeedFactory {
     mapping(address => mapping(address => mapping(address => mapping(uint128 => address))))
         public getFeed;
 
+    /// @notice Constructs a new OverlayV1UniswapV3Factory contract for used to deploy new
+    /// @notice UniswapV3 feeds to be offered as a market
+    /// @param _ovlWethPool Address of OVL <-> WETH pool being offered as a market
+    /// @param _ovl Address of OVL tokens
+    /// @param _microWindow Micro window to define TWAP over (typically 600s)
+    /// @param _macroWindow Macro window to define TWAP over (typically 3600s)
     constructor(
         address _ovlWethPool,
         address _ovl,
@@ -24,6 +30,11 @@ contract OverlayV1UniswapV3Factory is OverlayV1FeedFactory {
         ovl = _ovl;
     }
 
+    /// @notice Deploys a new OverlayV1UniswapV3Feed contract
+    /// @param marketPool Address of pool being offered as a market
+    /// @param marketBaseToken The base token address of the pool
+    /// @param marketQuoteToken The quote token address of the pool
+    /// @param marketBaseAmount TODO
     function deployFeed(
         address marketPool,
         address marketBaseToken,
