@@ -112,7 +112,11 @@ contract OverlayV1UniswapV3Feed is IOverlayV1UniswapV3Feed, OverlayV1Feed {
             nowIdxsOvlWeth
         );
         int24 arithmeticMeanTickOvlWeth = arithmeticMeanTicksOvlWeth[0];
-        (uint256[] memory prices, uint256 reserve) = getPricesAndReserve(arithmeticMeanTicksMarket, arithmeticMeanTickOvlWeth, harmonicMeanLiquiditiesMarket);
+        (uint256[] memory prices, uint256 reserve) = getPricesAndReserve(
+            arithmeticMeanTicksMarket,
+            arithmeticMeanTickOvlWeth,
+            harmonicMeanLiquiditiesMarket
+        );
 
         return
             Oracle.Data({
@@ -130,41 +134,38 @@ contract OverlayV1UniswapV3Feed is IOverlayV1UniswapV3Feed, OverlayV1Feed {
     /// @dev Reserve is the reserve in marketPool over micro window
     /// @dev Needs ovlWeth price over micro to convert into OVL terms from WETH
     function getPricesAndReserve(
-      int24[] memory arithmeticMeanTicksMarket,
-      int24 arithmeticMeanTickOvlWeth,
-      uint128[] memory harmonicMeanLiquiditiesMarket
-    ) public view returns (
-    uint256[] memory prices,
-    uint256 reserve
-    ) {
+        int24[] memory arithmeticMeanTicksMarket,
+        int24 arithmeticMeanTickOvlWeth,
+        uint128[] memory harmonicMeanLiquiditiesMarket
+    ) public view returns (uint256[] memory prices, uint256 reserve) {
         // in terms of prices, will use for indexes
         //  0: priceOneMacroWindowAgo
         //  1: priceOverMacroWindow
         //  2: priceOverMicroWindow
         uint256[] memory prices = new uint256[](3);
         prices[0] = getQuoteAtTick(
-          arithmeticMeanTicksMarket[0],
-          marketBaseAmount,
-          marketBaseToken,
-          marketQuoteToken
+            arithmeticMeanTicksMarket[0],
+            marketBaseAmount,
+            marketBaseToken,
+            marketQuoteToken
         );
         prices[1] = getQuoteAtTick(
-          arithmeticMeanTicksMarket[1],
-          marketBaseAmount,
-          marketBaseToken,
-          marketQuoteToken
+            arithmeticMeanTicksMarket[1],
+            marketBaseAmount,
+            marketBaseToken,
+            marketQuoteToken
         );
         prices[2] = getQuoteAtTick(
-          arithmeticMeanTicksMarket[2],
-          marketBaseAmount,
-          marketBaseToken,
-          marketQuoteToken
+            arithmeticMeanTicksMarket[2],
+            marketBaseAmount,
+            marketBaseToken,
+            marketQuoteToken
         );
 
         uint256 reserve = getReserveInOvl(
-          arithmeticMeanTicksMarket[2],
-          harmonicMeanLiquiditiesMarket[2],
-          arithmeticMeanTickOvlWeth
+            arithmeticMeanTicksMarket[2],
+            harmonicMeanLiquiditiesMarket[2],
+            arithmeticMeanTickOvlWeth
         );
     }
 
@@ -268,63 +269,63 @@ contract OverlayV1UniswapV3Feed is IOverlayV1UniswapV3Feed, OverlayV1Feed {
         uint128 harmonicMeanLiquidity;
 
         (arithmeticMeanTick, harmonicMeanLiquidity) = getConsult(
-          tickCumulatives,
-          secondsPerLiquidityCumulativeX128s,
-          secondsAgos[0],
-          nowIdxs[0],
-          windows[0],
-          0);
-          arithmeticMeanTicks_[0] = arithmeticMeanTick;
-          harmonicMeanLiquidities_[0] = harmonicMeanLiquidity;
+            tickCumulatives,
+            secondsPerLiquidityCumulativeX128s,
+            secondsAgos[0],
+            nowIdxs[0],
+            windows[0],
+            0
+        );
+        arithmeticMeanTicks_[0] = arithmeticMeanTick;
+        harmonicMeanLiquidities_[0] = harmonicMeanLiquidity;
 
         (arithmeticMeanTick, harmonicMeanLiquidity) = getConsult(
-          tickCumulatives,
-          secondsPerLiquidityCumulativeX128s,
-          secondsAgos[1],
-          nowIdxs[1],
-          windows[1],
-          1);
-          arithmeticMeanTicks_[1] = arithmeticMeanTick;
-          harmonicMeanLiquidities_[1] = harmonicMeanLiquidity;
+            tickCumulatives,
+            secondsPerLiquidityCumulativeX128s,
+            secondsAgos[1],
+            nowIdxs[1],
+            windows[1],
+            1
+        );
+        arithmeticMeanTicks_[1] = arithmeticMeanTick;
+        harmonicMeanLiquidities_[1] = harmonicMeanLiquidity;
 
         (arithmeticMeanTick, harmonicMeanLiquidity) = getConsult(
-          tickCumulatives,
-          secondsPerLiquidityCumulativeX128s,
-          secondsAgos[2],
-          nowIdxs[2],
-          windows[2],
-          2);
-          arithmeticMeanTicks_[2] = arithmeticMeanTick;
-          harmonicMeanLiquidities_[2] = harmonicMeanLiquidity;
-
+            tickCumulatives,
+            secondsPerLiquidityCumulativeX128s,
+            secondsAgos[2],
+            nowIdxs[2],
+            windows[2],
+            2
+        );
+        arithmeticMeanTicks_[2] = arithmeticMeanTick;
+        harmonicMeanLiquidities_[2] = harmonicMeanLiquidity;
     }
 
     /// @dev TODO: better function name?
     function getConsult(
-      int56[] memory tickCumulatives,
-      uint160[] memory secondsPerLiquidityCumulativeX128s,
-      uint32 secondsAgo, uint256 nowIdx, uint32 window, uint256 i
-    )
-        public
-        view
-        returns (int24 arithmeticMeanTick, uint128 harmonicMeanLiquidity)
-    {
-            int56 tickCumulativesDelta = tickCumulatives[nowIdx] - tickCumulatives[i];
-            uint160 secondsPerLiquidityCumulativesDelta = secondsPerLiquidityCumulativeX128s[
-                nowIdx
-            ] - secondsPerLiquidityCumulativeX128s[i];
+        int56[] memory tickCumulatives,
+        uint160[] memory secondsPerLiquidityCumulativeX128s,
+        uint32 secondsAgo,
+        uint256 nowIdx,
+        uint32 window,
+        uint256 i
+    ) public view returns (int24 arithmeticMeanTick, uint128 harmonicMeanLiquidity) {
+        int56 tickCumulativesDelta = tickCumulatives[nowIdx] - tickCumulatives[i];
+        uint160 secondsPerLiquidityCumulativesDelta = secondsPerLiquidityCumulativeX128s[nowIdx] -
+            secondsPerLiquidityCumulativeX128s[i];
 
-            int24 arithmeticMeanTick = int24(tickCumulativesDelta / int56(int32(window)));
-            // Always round to negative infinity
-            if (tickCumulativesDelta < 0 && (tickCumulativesDelta % int56(int32(window)) != 0))
-                arithmeticMeanTick--;
+        int24 arithmeticMeanTick = int24(tickCumulativesDelta / int56(int32(window)));
+        // Always round to negative infinity
+        if (tickCumulativesDelta < 0 && (tickCumulativesDelta % int56(int32(window)) != 0))
+            arithmeticMeanTick--;
 
-            // We are multiplying here instead of shifting to ensure that harmonicMeanLiquidity
-            // doesn't overflow uint128
-            uint192 windowX160 = uint192(window) * type(uint160).max;
-            uint128 harmonicMeanLiquidity = uint128(
-                windowX160 / (uint192(secondsPerLiquidityCumulativesDelta) << 32)
-            );
+        // We are multiplying here instead of shifting to ensure that harmonicMeanLiquidity
+        // doesn't overflow uint128
+        uint192 windowX160 = uint192(window) * type(uint160).max;
+        uint128 harmonicMeanLiquidity = uint128(
+            windowX160 / (uint192(secondsPerLiquidityCumulativesDelta) << 32)
+        );
     }
 
     /// @dev COPIED AND MODIFIED FROM: Uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol
