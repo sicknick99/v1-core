@@ -262,14 +262,53 @@ contract OverlayV1UniswapV3Feed is IOverlayV1UniswapV3Feed, OverlayV1Feed {
             uint160[] memory secondsPerLiquidityCumulativeX128s
         ) = IUniswapV3Pool(pool).observe(secondsAgos);
 
-        arithmeticMeanTicks_ = new int24[](nowIdxs.length);
-        harmonicMeanLiquidities_ = new uint128[](nowIdxs.length);
+        arithmeticMeanTicks_ = new int24[](3);
+        harmonicMeanLiquidities_ = new uint128[](3);
+        int24 arithmeticMeanTick;
+        uint128 harmonicMeanLiquidity;
 
-        for (uint256 i = 0; i < nowIdxs.length; i++) {
-            uint32 secondsAgo = secondsAgos[i];
-            uint256 nowIdx = nowIdxs[i];
-            uint32 window = windows[i];
+        (arithmeticMeanTick, harmonicMeanLiquidity) = getConsult(
+          tickCumulatives,
+          secondsPerLiquidityCumulativeX128s,
+          secondsAgos[0],
+          nowIdxs[0],
+          windows[0],
+          0);
+          arithmeticMeanTicks_[0] = arithmeticMeanTick;
+          harmonicMeanLiquidities_[0] = harmonicMeanLiquidity;
 
+        (arithmeticMeanTick, harmonicMeanLiquidity) = getConsult(
+          tickCumulatives,
+          secondsPerLiquidityCumulativeX128s,
+          secondsAgos[1],
+          nowIdxs[1],
+          windows[1],
+          1);
+          arithmeticMeanTicks_[1] = arithmeticMeanTick;
+          harmonicMeanLiquidities_[1] = harmonicMeanLiquidity;
+
+        (arithmeticMeanTick, harmonicMeanLiquidity) = getConsult(
+          tickCumulatives,
+          secondsPerLiquidityCumulativeX128s,
+          secondsAgos[2],
+          nowIdxs[2],
+          windows[2],
+          2);
+          arithmeticMeanTicks_[2] = arithmeticMeanTick;
+          harmonicMeanLiquidities_[2] = harmonicMeanLiquidity;
+
+    }
+
+    /// @dev TODO: better function name?
+    function getConsult(
+      int56[] memory tickCumulatives,
+      uint160[] memory secondsPerLiquidityCumulativeX128s,
+      uint32 secondsAgo, uint256 nowIdx, uint32 window, uint256 i
+    )
+        public
+        view
+        returns (int24 arithmeticMeanTick, uint128 harmonicMeanLiquidity)
+    {
             int56 tickCumulativesDelta = tickCumulatives[nowIdx] - tickCumulatives[i];
             uint160 secondsPerLiquidityCumulativesDelta = secondsPerLiquidityCumulativeX128s[
                 nowIdx
@@ -286,10 +325,6 @@ contract OverlayV1UniswapV3Feed is IOverlayV1UniswapV3Feed, OverlayV1Feed {
             uint128 harmonicMeanLiquidity = uint128(
                 windowX160 / (uint192(secondsPerLiquidityCumulativesDelta) << 32)
             );
-
-            arithmeticMeanTicks_[i] = arithmeticMeanTick;
-            harmonicMeanLiquidities_[i] = harmonicMeanLiquidity;
-        }
     }
 
     /// @dev COPIED AND MODIFIED FROM: Uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol
