@@ -112,37 +112,7 @@ contract OverlayV1UniswapV3Feed is IOverlayV1UniswapV3Feed, OverlayV1Feed {
             nowIdxsOvlWeth
         );
         int24 arithmeticMeanTickOvlWeth = arithmeticMeanTicksOvlWeth[0];
-
-        // in terms of prices, will use for indexes
-        //  0: priceOneMacroWindowAgo
-        //  1: priceOverMacroWindow
-        //  2: priceOverMicroWindow
-        uint256[] memory prices = new uint256[](nowIdxs.length);
-
-        // reserve is the reserve in marketPool over micro window
-        // needs ovlWeth price over micro to convert into OVL terms from WETH
-        uint256 reserve;
-        for (uint256 i = 0; i < nowIdxs.length; i++) {
-            uint256 price = getQuoteAtTick(
-                arithmeticMeanTicksMarket[i],
-                marketBaseAmount,
-                marketBaseToken,
-                marketQuoteToken
-            );
-            prices[i] = price;
-
-            // if calculating priceOverMicroWindow in this loop,
-            // then calculate the reserve as well
-            if (i == 2) {
-                // TODO: pertaining to `arithmeticMeanTicksOvlWeth[i]`: use micro ovl/weth twap for
-                // conversion? (safe?)
-                reserve = getReserveInOvl(
-                    arithmeticMeanTicksMarket[i],
-                    harmonicMeanLiquiditiesMarket[i],
-                    arithmeticMeanTickOvlWeth
-                );
-            }
-        }
+        (uint256[] memory prices, uint256 reserve) = getPricesAndReserve(arithmeticMeanTicksMarket, arithmeticMeanTickOvlWeth, harmonicMeanLiquiditiesMarket);
 
         return
             Oracle.Data({
@@ -155,6 +125,47 @@ contract OverlayV1UniswapV3Feed is IOverlayV1UniswapV3Feed, OverlayV1Feed {
                 reserveOverMicroWindow: reserve,
                 hasReserve: true
             });
+    }
+
+    /// @dev Reserve is the reserve in marketPool over micro window
+    /// @dev Needs ovlWeth price over micro to convert into OVL terms from WETH
+    function getPricesAndReserve(
+      int24[] memory arithmeticMeanTicksMarket,
+      int24 arithmeticMeanTickOvlWeth,
+      uint128[] memory harmonicMeanLiquiditiesMarket
+    ) public view returns (
+    uint256[] memory prices,
+    uint256 reserve
+    ) {
+        // in terms of prices, will use for indexes
+        //  0: priceOneMacroWindowAgo
+        //  1: priceOverMacroWindow
+        //  2: priceOverMicroWindow
+        uint256[] memory prices = new uint256[](3);
+        prices[0] = getQuoteAtTick(
+          arithmeticMeanTicksMarket[0],
+          marketBaseAmount,
+          marketBaseToken,
+          marketQuoteToken
+        );
+        prices[1] = getQuoteAtTick(
+          arithmeticMeanTicksMarket[1],
+          marketBaseAmount,
+          marketBaseToken,
+          marketQuoteToken
+        );
+        prices[2] = getQuoteAtTick(
+          arithmeticMeanTicksMarket[2],
+          marketBaseAmount,
+          marketBaseToken,
+          marketQuoteToken
+        );
+
+        uint256 reserve = getReserveInOvl(
+          arithmeticMeanTicksMarket[2],
+          harmonicMeanLiquiditiesMarket[2],
+          arithmeticMeanTickOvlWeth
+        );
     }
 
     /// @dev returns input params needed for call to marketPool consult
